@@ -63,10 +63,13 @@ export default function Header() {
   }
 
   const handleAvatarClick = () => {
-    navigate('/settings')
+    navigate('/account')
   }
 
-  if (!orgSlug || !projectSlug) {
+  // Check if we're on the account page
+  const isAccountPage = location.pathname === '/account'
+
+  if (!isAccountPage && (!orgSlug || !projectSlug)) {
     return null
   }
 
@@ -83,18 +86,25 @@ export default function Header() {
           R
         </button>
 
-        {/* Org Switcher */}
-        <OrgSwitcher currentOrgSlug={orgSlug} onOrgChange={handleOrgChange} />
+        {isAccountPage ? (
+          /* Account breadcrumb - no dropdown */
+          <span className="text-sm font-medium">Account</span>
+        ) : (
+          <>
+            {/* Org Switcher */}
+            <OrgSwitcher currentOrgSlug={orgSlug!} onOrgChange={handleOrgChange} />
 
-        {/* Separator */}
-        <span className="text-gray-400">/</span>
+            {/* Separator */}
+            <span className="text-gray-400">/</span>
 
-        {/* Project Switcher */}
-        <ProjectSwitcher
-          currentOrgSlug={orgSlug}
-          currentProjectSlug={projectSlug}
-          onProjectChange={handleProjectChange}
-        />
+            {/* Project Switcher */}
+            <ProjectSwitcher
+              currentOrgSlug={orgSlug!}
+              currentProjectSlug={projectSlug!}
+              onProjectChange={handleProjectChange}
+            />
+          </>
+        )}
       </div>
 
       {/* Right section: Help and Avatar */}

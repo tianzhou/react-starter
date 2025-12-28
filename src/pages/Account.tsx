@@ -9,7 +9,7 @@ import { useSession, signOut } from '@/lib/auth-client'
 import { LogOut } from 'lucide-react'
 import UserAvatar from '@/components/UserAvatar'
 
-export default function Settings() {
+export default function Account() {
   const [colorTheme, setColorTheme] = useState<string[]>(['light'])
   const [iconTheme, setIconTheme] = useState<string[]>(['default'])
   const { data: session } = useSession()
@@ -22,9 +22,9 @@ export default function Settings() {
   return (
     <div className="flex-1 bg-white text-gray-900 overflow-auto">
       <div className="max-w-4xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
+        <h1 className="text-3xl font-bold mb-2">Preferences</h1>
         <p className="text-gray-600 mb-8">
-          Manage your workspace preferences and configurations
+          Configure general options, domains, transfers, and project lifecycle.
         </p>
 
         <div className="space-y-6">

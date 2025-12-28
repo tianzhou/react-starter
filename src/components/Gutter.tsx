@@ -26,7 +26,7 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
   const handleClick = (id: GutterItem) => {
     onItemClick(id)
     if (id === 'settings') {
-      navigate('/settings')
+      navigate('/account')
     } else {
       if (location.pathname !== '/') {
         navigate('/')

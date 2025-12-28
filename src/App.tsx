@@ -6,7 +6,7 @@ import Sidebar from './components/Sidebar'
 import MainContent from './components/MainContent'
 import SignIn from './components/SignIn'
 import SignUp from './components/SignUp'
-import Settings from './pages/Settings'
+import Account from './pages/Account'
 import Header from './components/Header'
 import { useSession } from './lib/auth-client'
 import { getLastUsedOrgProject } from './hooks/useOrgProject'
@@ -100,10 +100,10 @@ function AppLayout() {
   const location = useLocation()
   const { data: session, isPending } = useSession()
 
-  const isSettingsPage = location.pathname === '/settings'
+  const isAccountPage = location.pathname === '/account'
   const isOrgProjectPage = location.pathname.startsWith('/org/')
-  const showSidebar = !isSettingsPage && !!session && isOrgProjectPage
-  const showHeader = !isSettingsPage && !!session && isOrgProjectPage
+  const showSidebar = !isAccountPage && !!session && isOrgProjectPage
+  const showHeader = !!session && (isOrgProjectPage || isAccountPage)
 
   if (isPending) {
     return (
@@ -134,7 +134,7 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<DefaultRedirect />} />
           <Route path="/org/:orgSlug/project/:projectSlug" element={<MainContent />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/account" element={<Account />} />
         </Routes>
       </div>
     </div>
