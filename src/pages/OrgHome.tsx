@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ interface Project {
 
 export default function OrgHome() {
   const { orgSlug } = useParams<{ orgSlug: string }>()
+  const navigate = useNavigate()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -66,7 +67,11 @@ export default function OrgHome() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map((project) => (
-              <Card key={project.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card
+                key={project.id}
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate(`/org/${orgSlug}/project/${project.slug}`)}
+              >
                 <CardHeader>
                   <CardTitle>{project.name}</CardTitle>
                   {project.description && (
