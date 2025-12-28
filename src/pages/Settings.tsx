@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useSession, signOut } from '@/lib/auth-client'
 import { LogOut } from 'lucide-react'
+import UserAvatar from '@/components/UserAvatar'
 
 export default function Settings() {
   const [colorTheme, setColorTheme] = useState<string[]>(['light'])
@@ -166,11 +167,14 @@ export default function Settings() {
                 <CardTitle>Account</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="font-medium">Signed in as</Label>
+                <div className="flex items-center gap-4">
+                  <UserAvatar user={session.user} size="lg" />
+                  <div className="flex-1 space-y-0.5">
+                    <Label className="font-medium">
+                      {session.user?.name || 'User'}
+                    </Label>
                     <div className="text-sm text-muted-foreground">
-                      {session.user?.email || session.user?.name || 'User'}
+                      {session.user?.email}
                     </div>
                   </div>
                   <Button
