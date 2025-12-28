@@ -7,6 +7,10 @@ import MainContent from './components/MainContent'
 import SignIn from './components/SignIn'
 import SignUp from './components/SignUp'
 import Account from './pages/Account'
+import OrgHome from './pages/OrgHome'
+import OrgSettings from './pages/OrgSettings'
+import ProjectHome from './pages/ProjectHome'
+import ProjectSettings from './pages/ProjectSettings'
 import Header from './components/Header'
 import { useSession } from './lib/auth-client'
 import { getLastUsedOrgProject } from './hooks/useOrgProject'
@@ -96,15 +100,24 @@ function DefaultRedirect() {
 }
 
 function AppLayout() {
-  const [activeItem, setActiveItem] = useState<GutterItem>('files')
+  const [activeItem, setActiveItem] = useState<GutterItem>('home')
   const location = useLocation()
   const { data: session, isPending } = useSession()
 
+  // Determine active item based on route
+  useEffect(() => {
+    if (location.pathname.includes('/settings')) {
+      setActiveItem('settings')
+    } else {
+      setActiveItem('home')
+    }
+  }, [location.pathname])
+
   const isAccountPage = location.pathname === '/account'
   const isOrgProjectPage = location.pathname.startsWith('/org/')
-  const showSidebar = !isAccountPage && !!session && isOrgProjectPage
+  const showSidebar = false // Sidebar is removed for now
   const showHeader = !!session && (isOrgProjectPage || isAccountPage)
-  const showGutter = !isAccountPage && !!session
+  const showGutter = !isAccountPage && !!session && isOrgProjectPage
 
   if (isPending) {
     return (
@@ -134,7 +147,10 @@ function AppLayout() {
         {showSidebar && <Sidebar activeItem={activeItem} />}
         <Routes>
           <Route path="/" element={<DefaultRedirect />} />
-          <Route path="/org/:orgSlug/project/:projectSlug" element={<MainContent />} />
+          <Route path="/org/:orgSlug" element={<OrgHome />} />
+          <Route path="/org/:orgSlug/settings" element={<OrgSettings />} />
+          <Route path="/org/:orgSlug/project/:projectSlug" element={<ProjectHome />} />
+          <Route path="/org/:orgSlug/project/:projectSlug/settings" element={<ProjectSettings />} />
           <Route path="/account" element={<Account />} />
         </Routes>
       </div>

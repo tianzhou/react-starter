@@ -1,38 +1,59 @@
-import { Files, Search, Package } from 'lucide-react'
+import { Home, Settings } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from './ui/button'
+import { useMemo } from 'react'
 
-export type GutterItem = 'files' | 'search' | 'extensions' | 'settings'
+export type GutterItem = 'home' | 'settings'
 
 // Re-export as a const for runtime access
-export const GUTTER_ITEMS = ['files', 'search', 'extensions', 'settings'] as const
+export const GUTTER_ITEMS = ['home', 'settings'] as const
 
 interface GutterProps {
   activeItem: GutterItem
   onItemClick: (item: GutterItem) => void
 }
 
-const topGutterIcons: { id: GutterItem; Icon: ComponentType<{ size?: number }>; label: string }[] = [
-  { id: 'files', Icon: Files, label: 'Explorer' },
-  { id: 'search', Icon: Search, label: 'Search' },
-  { id: 'extensions', Icon: Package, label: 'Extensions' },
-]
-
 export default function Gutter({ activeItem, onItemClick }: GutterProps) {
   const navigate = useNavigate()
   const location = useLocation()
 
+  // Determine context from URL
+  const context = useMemo(() => {
+    const orgMatch = location.pathname.match(/^\/org\/([^/]+)(?:\/project\/([^/]+))?(?:\/settings)?$/)
+    if (!orgMatch) return null
+
+    const [, orgSlug, projectSlug] = orgMatch
+    return { orgSlug, projectSlug }
+  }, [location.pathname])
+
+  const isOrgLevel = context && !context.projectSlug
+  const isProjectLevel = context && context.projectSlug
+
   const handleClick = (id: GutterItem) => {
     onItemClick(id)
-    if (id === 'settings') {
-      navigate('/account')
-    } else {
-      if (location.pathname !== '/') {
-        navigate('/')
+
+    if (!context) return
+
+    if (id === 'home') {
+      if (isProjectLevel) {
+        navigate(`/org/${context.orgSlug}/project/${context.projectSlug}`)
+      } else if (isOrgLevel) {
+        navigate(`/org/${context.orgSlug}`)
+      }
+    } else if (id === 'settings') {
+      if (isProjectLevel) {
+        navigate(`/org/${context.orgSlug}/project/${context.projectSlug}/settings`)
+      } else if (isOrgLevel) {
+        navigate(`/org/${context.orgSlug}/settings`)
       }
     }
   }
+
+  const gutterIcons: { id: GutterItem; Icon: ComponentType<{ size?: number }>; label: string }[] = [
+    { id: 'home', Icon: Home, label: isProjectLevel ? 'Project Home' : 'Organization Home' },
+    { id: 'settings', Icon: Settings, label: isProjectLevel ? 'Project Settings' : 'Organization Settings' },
+  ]
 
   const renderButton = ({ id, Icon, label }: { id: GutterItem; Icon: ComponentType<any>; label: string }) => {
     const isActive = activeItem === id
@@ -52,9 +73,9 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
 
   return (
     <div className="w-12 bg-gray-100 border-r border-gray-300 flex flex-col items-center py-2 gap-1">
-      {/* Top icons */}
+      {/* Context-specific icons */}
       <div className="flex flex-col gap-1">
-        {topGutterIcons.map(renderButton)}
+        {gutterIcons.map(renderButton)}
       </div>
     </div>
   )
