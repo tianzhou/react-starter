@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Gutter from './components/Gutter'
 import type { GutterItem } from './components/Gutter'
 import Sidebar from './components/Sidebar'
@@ -32,7 +32,7 @@ function AppLayout() {
         <Routes>
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="*" element={<SignIn />} />
+          <Route path="*" element={<Navigate to="/signin" replace />} />
         </Routes>
       </div>
     )
