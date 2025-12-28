@@ -85,14 +85,14 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
             navigate(`/org/${currentOrgSlug}`)
           }
         }}
-        className="text-sm font-medium hover:text-gray-600 transition-colors"
+        className="text-sm font-medium hover:text-gray-600 transition-colors cursor-pointer"
       >
         {loading ? '...' : currentOrg?.name || currentOrgSlug}
       </button>
 
       <Menu>
         <MenuTrigger>
-          <Button variant="ghost" size="icon-sm" aria-label="Switch organization">
+          <Button variant="ghost" size="icon-sm" aria-label="Switch organization" className="hover:bg-gray-200">
             <ChevronDown size={14} />
           </Button>
         </MenuTrigger>

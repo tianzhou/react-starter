@@ -103,14 +103,14 @@ export default function ProjectSwitcher({
             navigate(`/org/${currentOrgSlug}/project/${currentProjectSlug}`)
           }
         }}
-        className="text-sm font-medium hover:text-gray-600 transition-colors"
+        className="text-sm font-medium hover:text-gray-600 transition-colors cursor-pointer"
       >
         {loading ? '...' : currentProject?.name || currentProjectSlug}
       </button>
 
       <Menu>
         <MenuTrigger>
-          <Button variant="ghost" size="icon-sm" aria-label="Switch project">
+          <Button variant="ghost" size="icon-sm" aria-label="Switch project" className="hover:bg-gray-200">
             <ChevronDown size={14} />
           </Button>
         </MenuTrigger>
