@@ -20,10 +20,14 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
 
   // Determine context from URL
   const context = useMemo(() => {
-    const orgMatch = location.pathname.match(/^\/org\/([^/]+)(?:\/project\/([^/]+))?(?:\/settings)?$/)
+    // Match /org/:orgSlug or /org/:orgSlug/project/:projectSlug (with optional /settings)
+    const orgMatch = location.pathname.match(/^\/org\/([^/]+)/)
     if (!orgMatch) return null
 
-    const [, orgSlug, projectSlug] = orgMatch
+    const orgSlug = orgMatch[1]
+    const projectMatch = location.pathname.match(/\/project\/([^/]+)/)
+    const projectSlug = projectMatch ? projectMatch[1] : undefined
+
     return { orgSlug, projectSlug }
   }, [location.pathname])
 
