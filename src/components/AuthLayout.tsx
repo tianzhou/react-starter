@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { authClient } from '@/lib/auth-client';
+import GoogleIcon from './GoogleIcon';
 
 interface AuthLayoutProps {
   mode: 'signin' | 'signup';
@@ -25,6 +26,13 @@ export default function AuthLayout({ mode, title, description }: AuthLayoutProps
   const hasMinLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
   const isPasswordValid = hasMinLength && hasNumber;
+
+  const handleGoogleAuth = async () => {
+    await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: '/',
+    });
+  };
 
   const handleGithubAuth = async () => {
     await authClient.signIn.social({
@@ -103,13 +111,23 @@ export default function AuthLayout({ mode, title, description }: AuthLayoutProps
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
-            onClick={handleGithubAuth}
+            onClick={handleGoogleAuth}
             variant="outline"
-            className="w-full"
+            className="w-full flex items-center justify-center"
             size="lg"
           >
-            <Github className="mr-2" size={20} />
-            Continue with GitHub
+            <GoogleIcon />
+            <span className="ml-3">Continue with Google</span>
+          </Button>
+
+          <Button
+            onClick={handleGithubAuth}
+            variant="outline"
+            className="w-full flex items-center justify-center"
+            size="lg"
+          >
+            <Github size={20} />
+            <span className="ml-3">Continue with GitHub</span>
           </Button>
 
           <div className="relative">
