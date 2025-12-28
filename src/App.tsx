@@ -27,8 +27,7 @@ function AppLayout() {
 
   if (!session) {
     return (
-      <div className="flex h-screen w-screen overflow-hidden bg-white">
-        <Gutter activeItem={activeItem} onItemClick={setActiveItem} />
+      <div className="flex h-screen w-screen items-center justify-center bg-white">
         <Routes>
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />

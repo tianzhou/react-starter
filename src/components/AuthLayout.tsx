@@ -103,8 +103,8 @@ export default function AuthLayout({ mode, title, description }: AuthLayoutProps
     : { to: '/signin', text: 'Already have an account?', action: 'Log in' };
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-white p-4">
-      <Card className="w-full max-w-md">
+    <div className="w-full max-w-md p-4">
+      <Card className="w-full">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
