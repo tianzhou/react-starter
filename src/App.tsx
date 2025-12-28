@@ -5,6 +5,7 @@ import type { GutterItem } from './components/Gutter'
 import Sidebar from './components/Sidebar'
 import MainContent from './components/MainContent'
 import SignIn from './components/SignIn'
+import SignUp from './components/SignUp'
 import Settings from './pages/Settings'
 import { useSession } from './lib/auth-client'
 
@@ -28,7 +29,11 @@ function AppLayout() {
     return (
       <div className="flex h-screen w-screen overflow-hidden bg-white">
         <Gutter activeItem={activeItem} onItemClick={setActiveItem} />
-        <SignIn />
+        <Routes>
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="*" element={<SignIn />} />
+        </Routes>
       </div>
     )
   }
