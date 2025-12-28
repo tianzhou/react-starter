@@ -114,10 +114,10 @@ function AppLayout() {
   }, [location.pathname])
 
   const isAccountPage = location.pathname === '/account'
-  const isOrgProjectPage = location.pathname.startsWith('/org/')
+  const isOrgPage = location.pathname.startsWith('/org/')
   const showSidebar = false // Sidebar is removed for now
-  const showHeader = !!session && (isOrgProjectPage || isAccountPage)
-  const showGutter = !isAccountPage && !!session && isOrgProjectPage
+  const showHeader = !!session && (isOrgPage || isAccountPage)
+  const showGutter = !isAccountPage && !!session && isOrgPage
 
   if (isPending) {
     return (
