@@ -85,7 +85,7 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
             navigate(`/org/${currentOrgSlug}`)
           }
         }}
-        className="text-sm font-medium hover:text-gray-600 transition-colors cursor-pointer"
+        className="text-sm font-medium hover:text-gray-600 transition-colors"
       >
         {loading ? '...' : currentOrg?.name || currentOrgSlug}
       </button>

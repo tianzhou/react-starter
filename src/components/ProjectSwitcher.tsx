@@ -103,7 +103,7 @@ export default function ProjectSwitcher({
             navigate(`/org/${currentOrgSlug}/project/${currentProjectSlug}`)
           }
         }}
-        className="text-sm font-medium hover:text-gray-600 transition-colors cursor-pointer"
+        className="text-sm font-medium hover:text-gray-600 transition-colors"
       >
         {loading ? '...' : currentProject?.name || currentProjectSlug}
       </button>

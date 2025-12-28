@@ -162,4 +162,13 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Global button styles for consistent UX */
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
 }
