@@ -4,10 +4,19 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { useSession, signOut } from '@/lib/auth-client'
+import { LogOut } from 'lucide-react'
 
 export default function Settings() {
   const [colorTheme, setColorTheme] = useState<string[]>(['light'])
   const [iconTheme, setIconTheme] = useState<string[]>(['default'])
+  const { data: session } = useSession()
+
+  const handleSignOut = async () => {
+    await signOut()
+    window.location.href = '/signin'
+  }
 
   return (
     <div className="flex-1 bg-white text-gray-900 overflow-auto">
@@ -149,6 +158,33 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Account Settings */}
+          {session && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Account</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="font-medium">Signed in as</Label>
+                    <div className="text-sm text-muted-foreground">
+                      {session.user?.email || session.user?.name || 'User'}
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleSignOut}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <LogOut className="mr-2" size={16} />
+                    Sign Out
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
