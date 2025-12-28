@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { HelpCircle } from 'lucide-react'
-import { useOrgProject } from '@/hooks/useOrgProject'
+import { useEffect } from 'react'
 import { useSession } from '@/lib/auth-client'
 import OrgSwitcher from './OrgSwitcher'
 import ProjectSwitcher from './ProjectSwitcher'
@@ -8,9 +8,24 @@ import UserAvatar from './UserAvatar'
 import { Button } from './ui/button'
 
 export default function Header() {
-  const { orgSlug, projectSlug } = useOrgProject()
   const { data: session } = useSession()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Extract org and project from pathname
+  const pathMatch = location.pathname.match(/^\/org\/([^/]+)\/project\/([^/]+)/)
+  const orgSlug = pathMatch?.[1]
+  const projectSlug = pathMatch?.[2]
+
+  // Save to localStorage when params change
+  useEffect(() => {
+    if (orgSlug) {
+      localStorage.setItem('lastUsedOrg', orgSlug)
+    }
+    if (projectSlug) {
+      localStorage.setItem('lastUsedProject', projectSlug)
+    }
+  }, [orgSlug, projectSlug])
 
   const handleOrgChange = async (newOrgSlug: string) => {
     // Fetch first project in the new org
