@@ -68,8 +68,15 @@ export default function Header() {
 
   // Check if we're on the account page
   const isAccountPage = location.pathname === '/account'
+  const isOrgPage = location.pathname.startsWith('/org/')
 
-  if (!isAccountPage && (!orgSlug || !projectSlug)) {
+  // Don't show header if not on account or org page
+  if (!isAccountPage && !isOrgPage) {
+    return null
+  }
+
+  // Don't show header if on org page but no orgSlug detected
+  if (isOrgPage && !orgSlug) {
     return null
   }
 
@@ -89,7 +96,8 @@ export default function Header() {
         {isAccountPage ? (
           /* Account breadcrumb - no dropdown */
           <span className="text-sm font-medium">Account</span>
-        ) : (
+        ) : projectSlug ? (
+          /* Org + Project breadcrumbs */
           <>
             {/* Org Switcher */}
             <OrgSwitcher currentOrgSlug={orgSlug!} onOrgChange={handleOrgChange} />
@@ -100,10 +108,13 @@ export default function Header() {
             {/* Project Switcher */}
             <ProjectSwitcher
               currentOrgSlug={orgSlug!}
-              currentProjectSlug={projectSlug!}
+              currentProjectSlug={projectSlug}
               onProjectChange={handleProjectChange}
             />
           </>
+        ) : (
+          /* Org only breadcrumb */
+          <OrgSwitcher currentOrgSlug={orgSlug!} onOrgChange={handleOrgChange} />
         )}
       </div>
 

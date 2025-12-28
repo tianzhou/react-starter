@@ -32,7 +32,7 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
   }, [location.pathname])
 
   const isOrgLevel = context && !context.projectSlug
-  const isProjectLevel = context && context.projectSlug
+  const isProjectLevel = context && !!context.projectSlug
 
   const handleClick = (id: GutterItem) => {
     onItemClick(id)
@@ -40,23 +40,23 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
     if (!context) return
 
     if (id === 'home') {
-      if (isProjectLevel) {
+      if (context.projectSlug) {
         navigate(`/org/${context.orgSlug}/project/${context.projectSlug}`)
-      } else if (isOrgLevel) {
+      } else {
         navigate(`/org/${context.orgSlug}`)
       }
     } else if (id === 'settings') {
-      if (isProjectLevel) {
+      if (context.projectSlug) {
         navigate(`/org/${context.orgSlug}/project/${context.projectSlug}/settings`)
-      } else if (isOrgLevel) {
+      } else {
         navigate(`/org/${context.orgSlug}/settings`)
       }
     }
   }
 
   const gutterIcons: { id: GutterItem; Icon: ComponentType<{ size?: number }>; label: string }[] = [
-    { id: 'home', Icon: Home, label: isProjectLevel ? 'Project Home' : 'Organization Home' },
-    { id: 'settings', Icon: Settings, label: isProjectLevel ? 'Project Settings' : 'Organization Settings' },
+    { id: 'home', Icon: Home, label: context?.projectSlug ? 'Project Home' : 'Organization Home' },
+    { id: 'settings', Icon: Settings, label: context?.projectSlug ? 'Project Settings' : 'Organization Settings' },
   ]
 
   const renderButton = ({ id, Icon, label }: { id: GutterItem; Icon: ComponentType<any>; label: string }) => {
