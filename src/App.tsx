@@ -104,6 +104,7 @@ function AppLayout() {
   const isOrgProjectPage = location.pathname.startsWith('/org/')
   const showSidebar = !isAccountPage && !!session && isOrgProjectPage
   const showHeader = !!session && (isOrgProjectPage || isAccountPage)
+  const showGutter = !isAccountPage && !!session
 
   if (isPending) {
     return (
@@ -129,7 +130,7 @@ function AppLayout() {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-white">
       {showHeader && <Header />}
       <div className="flex flex-1 overflow-hidden">
-        <Gutter activeItem={activeItem} onItemClick={setActiveItem} />
+        {showGutter && <Gutter activeItem={activeItem} onItemClick={setActiveItem} />}
         {showSidebar && <Sidebar activeItem={activeItem} />}
         <Routes>
           <Route path="/" element={<DefaultRedirect />} />
