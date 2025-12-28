@@ -116,7 +116,7 @@ function AppLayout() {
   const isAccountPage = location.pathname === '/account'
   const isOrgPage = location.pathname.startsWith('/org/')
   const showSidebar = false // Sidebar is removed for now
-  const showHeader = !!session && (isOrgPage || isAccountPage)
+  const showHeader = !!session // Always show header when logged in
   const showGutter = !isAccountPage && !!session && isOrgPage
 
   if (isPending) {
