@@ -1,12 +1,15 @@
 import { Github } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { authClient } from '@/lib/auth-client';
 import GoogleIcon from './GoogleIcon';
+
+const LAST_PROVIDER_KEY = 'lastUsedAuthProvider';
 
 interface AuthLayoutProps {
   mode: 'signin' | 'signup';
@@ -21,6 +24,13 @@ export default function AuthLayout({ mode, title, description }: AuthLayoutProps
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPasswordField, setShowPasswordField] = useState(false);
+  const [lastUsedProvider, setLastUsedProvider] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get last used provider from localStorage
+    const lastProvider = localStorage.getItem(LAST_PROVIDER_KEY);
+    setLastUsedProvider(lastProvider);
+  }, []);
 
   // Password validation
   const hasMinLength = password.length >= 8;
@@ -28,6 +38,7 @@ export default function AuthLayout({ mode, title, description }: AuthLayoutProps
   const isPasswordValid = hasMinLength && hasNumber;
 
   const handleGoogleAuth = async () => {
+    localStorage.setItem(LAST_PROVIDER_KEY, 'google');
     await authClient.signIn.social({
       provider: 'google',
       callbackURL: '/',
@@ -35,6 +46,7 @@ export default function AuthLayout({ mode, title, description }: AuthLayoutProps
   };
 
   const handleGithubAuth = async () => {
+    localStorage.setItem(LAST_PROVIDER_KEY, 'github');
     await authClient.signIn.social({
       provider: 'github',
       callbackURL: '/',
@@ -113,21 +125,39 @@ export default function AuthLayout({ mode, title, description }: AuthLayoutProps
           <Button
             onClick={handleGoogleAuth}
             variant="outline"
-            className="w-full flex items-center justify-center"
+            className="w-full flex items-center justify-center relative"
             size="lg"
           >
             <GoogleIcon />
             <span className="ml-3">Continue with Google</span>
+            {lastUsedProvider === 'google' && (
+              <Badge
+                variant="info"
+                size="sm"
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                Last used
+              </Badge>
+            )}
           </Button>
 
           <Button
             onClick={handleGithubAuth}
             variant="outline"
-            className="w-full flex items-center justify-center"
+            className="w-full flex items-center justify-center relative"
             size="lg"
           >
             <Github size={20} />
             <span className="ml-3">Continue with GitHub</span>
+            {lastUsedProvider === 'github' && (
+              <Badge
+                variant="info"
+                size="sm"
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                Last used
+              </Badge>
+            )}
           </Button>
 
           <div className="relative">
