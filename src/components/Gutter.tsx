@@ -2,8 +2,6 @@ import { Files, Search, Package } from 'lucide-react'
 import { ComponentType } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from './ui/button'
-import { useSession } from '@/lib/auth-client'
-import UserAvatar from './UserAvatar'
 
 export type GutterItem = 'files' | 'search' | 'extensions' | 'settings'
 
@@ -24,7 +22,6 @@ const topGutterIcons: { id: GutterItem; Icon: ComponentType<{ size?: number }>; 
 export default function Gutter({ activeItem, onItemClick }: GutterProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { data: session } = useSession()
 
   const handleClick = (id: GutterItem) => {
     onItemClick(id)
@@ -53,30 +50,12 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
     )
   }
 
-  const handleAvatarClick = () => {
-    onItemClick('settings')
-    navigate('/settings')
-  }
-
   return (
     <div className="w-12 bg-gray-100 border-r border-gray-300 flex flex-col items-center py-2 gap-1">
       {/* Top icons */}
       <div className="flex flex-col gap-1">
         {topGutterIcons.map(renderButton)}
       </div>
-
-      {/* Spacer to push bottom icons down */}
-      <div className="flex-1" />
-
-      {/* User Avatar */}
-      <button
-        onClick={handleAvatarClick}
-        className="p-1 hover:bg-gray-200 rounded-md transition-colors"
-        aria-label="Settings"
-        title="Settings"
-      >
-        <UserAvatar user={session?.user} size="sm" />
-      </button>
     </div>
   )
 }
