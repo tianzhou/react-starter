@@ -13,9 +13,10 @@ export default function Header() {
   const location = useLocation()
 
   // Extract org and project from pathname
-  const pathMatch = location.pathname.match(/^\/org\/([^/]+)\/project\/([^/]+)/)
-  const orgSlug = pathMatch?.[1]
-  const projectSlug = pathMatch?.[2]
+  const orgMatch = location.pathname.match(/^\/org\/([^/]+)/)
+  const orgSlug = orgMatch?.[1]
+  const projectMatch = location.pathname.match(/\/project\/([^/]+)/)
+  const projectSlug = projectMatch?.[1]
 
   // Save to localStorage when params change
   useEffect(() => {
