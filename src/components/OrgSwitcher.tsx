@@ -110,14 +110,20 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
             </MenuItem>
           ))}
           <MenuSeparator />
-          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <MenuItem onSelect={(e) => e.preventDefault()}>
-                <Plus size={16} className="mr-2" />
-                Create new organization
-              </MenuItem>
-            </DialogTrigger>
-            <DialogContent>
+          <MenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              setCreateDialogOpen(true)
+            }}
+          >
+            <Plus size={16} className="mr-2" />
+            Create new organization
+          </MenuItem>
+        </MenuPopup>
+      </Menu>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Organization</DialogTitle>
               </DialogHeader>
@@ -146,9 +152,7 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
-        </MenuPopup>
-      </Menu>
+      </Dialog>
     </div>
   )
 }

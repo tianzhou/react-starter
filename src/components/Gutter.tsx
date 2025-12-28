@@ -1,5 +1,5 @@
 import { Files, Search, Package } from 'lucide-react'
-import { ComponentType } from 'react'
+import type { ComponentType } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from './ui/button'
 
