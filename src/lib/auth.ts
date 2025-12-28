@@ -8,6 +8,26 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    minPasswordLength: 8,
+    password: {
+      validate: (password: string) => {
+        // Must have at least 8 characters
+        if (password.length < 8) {
+          return {
+            valid: false,
+            message: "Password must be at least 8 characters",
+          };
+        }
+        // Must have a number
+        if (!/\d/.test(password)) {
+          return {
+            valid: false,
+            message: "Password must contain a number (0-9)",
+          };
+        }
+        return { valid: true };
+      },
+    },
   },
   socialProviders: {
     github: {
