@@ -54,8 +54,21 @@ jobs:
           BETTER_AUTH_SECRET=dGVzdC1zZWNyZXQta2V5LWZvci1naXRodWItYWN0aW9ucy1jaQ==
           EOF
 
+      - name: Verify environment setup
+        run: |
+          echo "Contents of .env file:"
+          cat .env
+          echo ""
+          echo "DATABASE_URL from environment:"
+          echo $DATABASE_URL
+
       - name: Run database migrations
-        run: pnpm db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+        run: |
+          echo "Running database migrations with DATABASE_URL: $DATABASE_URL"
+          pnpm db:push
+          echo "Database migrations completed"
 
       - name: Install Hurl
         run: |
@@ -69,6 +82,10 @@ jobs:
         run: pnpm build:server
 
       - name: Create test user
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          FRONTEND_URL: http://localhost:5173
+          BETTER_AUTH_SECRET: dGVzdC1zZWNyZXQta2V5LWZvci1naXRodWItYWN0aW9ucy1jaQ==
         run: |
           node dist/server.mjs &
           SERVER_PID=$!
@@ -108,6 +125,10 @@ jobs:
           sleep 1
 
       - name: Run API tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          FRONTEND_URL: http://localhost:5173
+          BETTER_AUTH_SECRET: dGVzdC1zZWNyZXQta2V5LWZvci1naXRodWItYWN0aW9ucy1jaQ==
         run: |
           node dist/server.mjs &
           SERVER_PID=$!
