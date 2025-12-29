@@ -167,7 +167,36 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
     };
   },
   async deleteOrg(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    const userId = await getUserFromContext(context);
+    if (!userId) {
+      throw new ConnectError("Unauthorized", Code.Unauthenticated);
+    }
+
+    if (!req.id) {
+      throw new ConnectError("Organization ID required", Code.InvalidArgument);
+    }
+
+    // Check ownership
+    const [member] = await db
+      .select()
+      .from(orgMember)
+      .where(and(eq(orgMember.orgId, req.id), eq(orgMember.userId, userId)));
+
+    if (!member) {
+      throw new ConnectError("Organization not found", Code.NotFound);
+    }
+    if (member.role !== "owner") {
+      throw new ConnectError(
+        "Only owners can delete organizations",
+        Code.PermissionDenied
+      );
+    }
+
+    // Delete members first (foreign key constraint)
+    await db.delete(orgMember).where(eq(orgMember.orgId, req.id));
+    await db.delete(org).where(eq(org.id, req.id));
+
+    return {};
   },
   async listMembers(req, context) {
     throw new ConnectError("Not implemented", Code.Unimplemented);
