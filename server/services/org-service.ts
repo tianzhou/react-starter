@@ -12,8 +12,14 @@ import { eq, and } from "drizzle-orm";
  */
 async function getUserFromContext(context: HandlerContext): Promise<string | null> {
   try {
+    // Convert Headers to plain object for better-auth
+    const headersObj: Record<string, string> = {};
+    context.requestHeader.forEach((value, key) => {
+      headersObj[key] = value;
+    });
+
     const session = await auth.api.getSession({
-      headers: context.requestHeader as any,
+      headers: new Headers(headersObj),
     });
     return session?.user?.id || null;
   } catch (error) {
@@ -111,25 +117,28 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
 
     const slug = `${baseSlug}-${Date.now().toString(36)}`;
 
-    // Create org
-    const [newOrg] = await db
-      .insert(org)
-      .values({ name: req.name.trim(), slug })
-      .returning();
+    // Create org and add user as owner atomically
+    const result = await db.transaction(async (tx) => {
+      const [newOrg] = await tx
+        .insert(org)
+        .values({ name: req.name.trim(), slug })
+        .returning();
 
-    // Add user as owner
-    await db.insert(orgMember).values({
-      orgId: newOrg.id,
-      userId: userId,
-      role: "owner",
+      await tx.insert(orgMember).values({
+        orgId: newOrg.id,
+        userId: userId,
+        role: "owner",
+      });
+
+      return newOrg;
     });
 
     return {
       org: {
-        id: newOrg.id,
-        name: newOrg.name,
-        slug: newOrg.slug,
-        createdAt: newOrg.createdAt.toISOString(),
+        id: result.id,
+        name: result.name,
+        slug: result.slug,
+        createdAt: result.createdAt.toISOString(),
       },
     };
   },
@@ -200,9 +209,11 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
       );
     }
 
-    // Delete members first (foreign key constraint)
-    await db.delete(orgMember).where(eq(orgMember.orgId, req.id));
-    await db.delete(org).where(eq(org.id, req.id));
+    // Delete members and org atomically
+    await db.transaction(async (tx) => {
+      await tx.delete(orgMember).where(eq(orgMember.orgId, req.id));
+      await tx.delete(org).where(eq(org.id, req.id));
+    });
 
     return {};
   },

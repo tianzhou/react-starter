@@ -9,7 +9,7 @@
     "build:server:watch": "node scripts/build-server.mjs --watch",
     "dev": "pnpm gen && pnpm build:server && concurrently \"pnpm dev:vite\" \"pnpm dev:server\"",
     "dev:vite": "vite",
-    "dev:server": "concurrently \"pnpm build:server:watch\" \"sleep 2 && node --watch dist/server.mjs\"",
+    "dev:server": "concurrently \"pnpm build:server:watch\" \"node scripts/sleep.mjs 2 && node --watch dist/server.mjs\"",
     "build": "pnpm gen && pnpm build:server && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

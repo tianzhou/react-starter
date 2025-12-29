@@ -33,6 +33,8 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
       const newOrg = await createMutation.mutateAsync({
         name: newOrgName.trim(),
       })
+
+      // Close dialog and reset form on success
       setCreateDialogOpen(false)
       setNewOrgName('')
 
@@ -58,6 +60,10 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
         type: 'error',
         duration: 5000,
       })
+
+      // Close dialog and reset form on error for better UX
+      setCreateDialogOpen(false)
+      setNewOrgName('')
     }
   }
 
