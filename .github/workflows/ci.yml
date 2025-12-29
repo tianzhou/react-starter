@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup test environment
+        run: |
+          cp tests/.env.example tests/.env
+          cat > .env << EOF
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/testdb
+          FRONTEND_URL=http://localhost:5173
+          VITE_SERVER_URL=http://localhost:3001
+          BETTER_AUTH_SECRET=dGVzdC1zZWNyZXQta2V5LWZvci1naXRodWItYWN0aW9ucy1jaQ==
+          EOF
+
+      - name: Verify environment setup
+        run: |
+          echo "Contents of .env file:"
+          cat .env
+          echo ""
+          echo "DATABASE_URL from environment:"
+          echo $DATABASE_URL
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+        run: |
+          echo "Running database migrations with DATABASE_URL: $DATABASE_URL"
+          pnpm db:migrate
+          echo "Database migrations completed"
+
+      - name: Install Hurl
+        run: |
+          curl --location --remote-name https://github.com/Orange-OpenSource/hurl/releases/download/5.0.1/hurl_5.0.1_amd64.deb
+          sudo apt update && sudo apt install ./hurl_5.0.1_amd64.deb
+
+      - name: Generate proto code
+        run: pnpm gen
+
+      - name: Build server
+        run: pnpm build:server
+
+      - name: Create test user
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          FRONTEND_URL: http://localhost:5173
+          BETTER_AUTH_SECRET: dGVzdC1zZWNyZXQta2V5LWZvci1naXRodWItYWN0aW9ucy1jaQ==
+        run: |
+          node dist/server.mjs &
+          SERVER_PID=$!
+          sleep 3
+
+          # Create test user via signup API
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3001/api/auth/sign-up/email \
+            -H "Content-Type: application/json" \
+            -d '{"email":"test@example.com","password":"test_password_123","name":"Test User"}')
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Failed to create test user. HTTP code: $HTTP_CODE"
+            echo "Response: $BODY"
+            kill $SERVER_PID
+            exit 1
+          fi
+
+          # Extract user ID from response
+          USER_ID=$(echo "$BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          if [ -z "$USER_ID" ]; then
+            echo "Failed to extract user ID from response"
+            echo "Response: $BODY"
+            kill $SERVER_PID
+            exit 1
+          fi
+
+          echo "Created test user with ID: $USER_ID"
+
+          # Update tests/.env with the user ID
+          sed -i "s/TEST_USER_ID=.*/TEST_USER_ID=$USER_ID/" tests/.env
+
+          kill $SERVER_PID
+          sleep 1
+
+      - name: Run API tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
+          FRONTEND_URL: http://localhost:5173
+          BETTER_AUTH_SECRET: dGVzdC1zZWNyZXQta2V5LWZvci1naXRodWItYWN0aW9ucy1jaQ==
+        run: |
+          node dist/server.mjs &
+          SERVER_PID=$!
+          sleep 3
+
+          pnpm test:api
+          TEST_RESULT=$?
+
+          kill $SERVER_PID
+          exit $TEST_RESULT

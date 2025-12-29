@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import Gutter from './components/Gutter'
 import type { GutterItem } from './components/Gutter'
 import Sidebar from './components/Sidebar'
-import MainContent from './components/MainContent'
 import SignIn from './components/SignIn'
 import SignUp from './components/SignUp'
 import Account from './pages/Account'
@@ -11,42 +10,24 @@ import OrgHome from './pages/OrgHome'
 import OrgSettings from './pages/OrgSettings'
 import Header from './components/Header'
 import { useSession } from './lib/auth-client'
+import { useOrgs } from './hooks/useOrgs'
 
 function DefaultRedirect() {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(true)
+  const { data: orgs, isLoading } = useOrgs()
 
   useEffect(() => {
-    async function redirect() {
-      try {
-        // Fetch user's orgs
-        const serverUrl = import.meta.env.VITE_SERVER_URL
-        const response = await fetch(`${serverUrl}/api/orgs`, {
-          credentials: 'include',
-        })
-
-        if (response.ok) {
-          const orgs = await response.json()
-          if (orgs.length === 0) {
-            // No orgs, should redirect to onboarding (for now just show a message)
-            setLoading(false)
-            return
-          }
-
-          // Redirect to first org
-          navigate(`/org/${orgs[0].slug}`, { replace: true })
-          return
-        }
-      } catch (error) {
-        console.error('Failed to redirect:', error)
+    if (!isLoading && orgs) {
+      if (orgs.length === 0) {
+        // No orgs, user needs to create one
+        return
       }
-      setLoading(false)
+      // Redirect to first org
+      navigate(`/org/${orgs[0].slug}`, { replace: true })
     }
+  }, [isLoading, orgs, navigate])
 
-    redirect()
-  }, [navigate])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
         <div className="text-gray-600">Loading...</div>
