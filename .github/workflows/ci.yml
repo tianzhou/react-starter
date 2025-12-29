@@ -67,7 +67,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
         run: |
           echo "Running database migrations with DATABASE_URL: $DATABASE_URL"
-          pnpm db:push
+          pnpm db:migrate
           echo "Database migrations completed"
 
       - name: Install Hurl
