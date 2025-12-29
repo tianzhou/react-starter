@@ -52,7 +52,39 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
     };
   },
   async getOrg(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    const userId = await getUserFromContext(context);
+    if (!userId) {
+      throw new ConnectError("Unauthorized", Code.Unauthenticated);
+    }
+
+    if (!req.id) {
+      throw new ConnectError("Organization ID required", Code.InvalidArgument);
+    }
+
+    // Verify user is member of org
+    const [member] = await db
+      .select()
+      .from(orgMember)
+      .where(and(eq(orgMember.orgId, req.id), eq(orgMember.userId, userId)));
+
+    if (!member) {
+      throw new ConnectError("Organization not found", Code.NotFound);
+    }
+
+    const [result] = await db.select().from(org).where(eq(org.id, req.id));
+
+    if (!result) {
+      throw new ConnectError("Organization not found", Code.NotFound);
+    }
+
+    return {
+      org: {
+        id: result.id,
+        name: result.name,
+        slug: result.slug,
+        createdAt: result.createdAt.toISOString(),
+      },
+    };
   },
   async createOrg(req, context) {
     const userId = await getUserFromContext(context);
