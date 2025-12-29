@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"pnpm dev:vite\" \"pnpm dev:server\"",
+    "gen": "buf generate --template proto/buf.gen.yaml proto",
+    "dev": "pnpm gen && concurrently \"pnpm dev:vite\" \"pnpm dev:server\"",
     "dev:vite": "vite",
     "dev:server": "tsx watch server/index.ts",
-    "build": "tsc -b && vite build",
+    "build": "pnpm gen && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",
