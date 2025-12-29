@@ -4,7 +4,7 @@ import { OrgService } from '../gen/org_connect';
 
 // Create transport for browser
 const transport = createConnectTransport({
-  baseUrl: 'http://localhost:3001',
+  baseUrl: import.meta.env.VITE_SERVER_URL || 'http://localhost:3001',
   credentials: 'include', // Important: include cookies for auth
 });
 

@@ -22,7 +22,6 @@ async function getUserFromContext(context: HandlerContext): Promise<string | nul
   }
 }
 
-// Placeholder handlers - will implement in next tasks
 export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
   async listOrgs(req, context) {
     const userId = await getUserFromContext(context);
@@ -101,6 +100,15 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
+
+    // Validate that baseSlug is not empty after transformation
+    if (!baseSlug) {
+      throw new ConnectError(
+        "Organization name must contain at least one alphanumeric character",
+        Code.InvalidArgument
+      );
+    }
+
     const slug = `${baseSlug}-${Date.now().toString(36)}`;
 
     // Create org
@@ -197,51 +205,5 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
     await db.delete(org).where(eq(org.id, req.id));
 
     return {};
-  },
-  async listMembers(req, context) {
-    const userId = await getUserFromContext(context);
-    if (!userId) {
-      throw new ConnectError("Unauthorized", Code.Unauthenticated);
-    }
-
-    if (!req.orgId) {
-      throw new ConnectError("Organization ID required", Code.InvalidArgument);
-    }
-
-    // Verify user is member
-    const [member] = await db
-      .select()
-      .from(orgMember)
-      .where(and(eq(orgMember.orgId, req.orgId), eq(orgMember.userId, userId)));
-
-    if (!member) {
-      throw new ConnectError("Organization not found", Code.NotFound);
-    }
-
-    const members = await db
-      .select()
-      .from(orgMember)
-      .where(eq(orgMember.orgId, req.orgId));
-
-    return {
-      members: members.map((m) => ({
-        orgId: m.orgId,
-        userId: m.userId,
-        role: m.role,
-        joinedAt: m.joinedAt.toISOString(),
-      })),
-    };
-  },
-
-  async addMember(req, context) {
-    throw new ConnectError("Not implemented yet", Code.Unimplemented);
-  },
-
-  async updateMemberRole(req, context) {
-    throw new ConnectError("Not implemented yet", Code.Unimplemented);
-  },
-
-  async removeMember(req, context) {
-    throw new ConnectError("Not implemented yet", Code.Unimplemented);
   },
 };

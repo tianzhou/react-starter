@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { useOrgs, useCreateOrg } from '../hooks/useOrgs'
+import { toastManager } from './ui/toast'
+import { ConnectError } from '@connectrpc/connect'
 
 interface OrgSwitcherProps {
   currentOrgSlug: string
@@ -16,7 +18,6 @@ interface OrgSwitcherProps {
 export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcherProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [newOrgName, setNewOrgName] = useState('')
-  const [newOrgSlug, setNewOrgSlug] = useState('')
   const navigate = useNavigate()
 
   const { data: orgs, isLoading } = useOrgs()
@@ -24,34 +25,39 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
 
   const currentOrg = orgs?.find((org) => org.slug === currentOrgSlug)
 
-  // Auto-generate slug from name
-  function handleNameChange(name: string) {
-    setNewOrgName(name)
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-    setNewOrgSlug(slug)
-  }
-
   async function handleCreateOrg(e: React.FormEvent) {
     e.preventDefault()
-    if (!newOrgName.trim() || !newOrgSlug.trim() || createMutation.isPending) return
+    if (!newOrgName.trim() || createMutation.isPending) return
 
     try {
       const newOrg = await createMutation.mutateAsync({
         name: newOrgName.trim(),
-        slug: newOrgSlug.trim(),
       })
       setCreateDialogOpen(false)
       setNewOrgName('')
-      setNewOrgSlug('')
+
+      toastManager.add({
+        title: 'Organization created',
+        description: `Successfully created ${newOrg?.name}`,
+        type: 'success',
+        duration: 3000,
+      })
+
       // Navigate to new org
       if (newOrg) {
         navigate(`/org/${newOrg.slug}`)
       }
     } catch (error) {
-      console.error('Failed to create org:', error)
+      const errorMessage = error instanceof ConnectError
+        ? error.rawMessage
+        : 'Failed to create organization'
+
+      toastManager.add({
+        title: 'Error',
+        description: errorMessage,
+        type: 'error',
+        duration: 5000,
+      })
     }
   }
 
@@ -110,19 +116,11 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
                   <Input
                     id="org-name"
                     value={newOrgName}
-                    onChange={(e) => handleNameChange(e.target.value)}
+                    onChange={(e) => setNewOrgName(e.target.value)}
                     placeholder="Acme Inc"
                     autoFocus
                   />
-                </div>
-                <div>
-                  <Label htmlFor="org-slug">Organization Slug</Label>
-                  <Input
-                    id="org-slug"
-                    value={newOrgSlug}
-                    onChange={(e) => setNewOrgSlug(e.target.value)}
-                    placeholder="acme-inc"
-                  />
+                  <p className="text-xs text-gray-500 mt-1">A unique slug will be automatically generated</p>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button
@@ -132,7 +130,7 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={!newOrgName.trim() || !newOrgSlug.trim() || createMutation.isPending}>
+                  <Button type="submit" disabled={!newOrgName.trim() || createMutation.isPending}>
                     {createMutation.isPending ? 'Creating...' : 'Create'}
                   </Button>
                 </div>
