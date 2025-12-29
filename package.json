@@ -6,9 +6,10 @@
   "scripts": {
     "gen": "buf generate --template proto/buf.gen.yaml proto && node scripts/fix-imports.mjs",
     "build:server": "node scripts/build-server.mjs",
+    "build:server:watch": "node scripts/build-server.mjs --watch",
     "dev": "pnpm gen && pnpm build:server && concurrently \"pnpm dev:vite\" \"pnpm dev:server\"",
     "dev:vite": "vite",
-    "dev:server": "node --watch dist/server.mjs",
+    "dev:server": "concurrently \"pnpm build:server:watch\" \"sleep 2 && node --watch dist/server.mjs\"",
     "build": "pnpm gen && pnpm build:server && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

@@ -1,12 +1,14 @@
 #!/usr/bin/env node
-import { build } from 'esbuild';
+import { context } from 'esbuild';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
 
-await build({
+const watchMode = process.argv.includes('--watch');
+
+const buildConfig = {
   entryPoints: [join(rootDir, 'server/index.ts')],
   bundle: true,
   platform: 'node',
@@ -33,6 +35,16 @@ import { dirname } from 'path';`,
   },
   sourcemap: true,
   logLevel: 'info',
-});
+};
 
-console.log('Server build complete!');
+if (watchMode) {
+  const ctx = await context(buildConfig);
+  await ctx.watch();
+  console.log('Watching for server file changes...');
+} else {
+  const { context: buildContext } = await import('esbuild');
+  const ctx = await buildContext(buildConfig);
+  await ctx.rebuild();
+  await ctx.dispose();
+  console.log('Server build complete!');
+}
