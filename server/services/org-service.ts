@@ -199,15 +199,49 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
     return {};
   },
   async listMembers(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    const userId = await getUserFromContext(context);
+    if (!userId) {
+      throw new ConnectError("Unauthorized", Code.Unauthenticated);
+    }
+
+    if (!req.orgId) {
+      throw new ConnectError("Organization ID required", Code.InvalidArgument);
+    }
+
+    // Verify user is member
+    const [member] = await db
+      .select()
+      .from(orgMember)
+      .where(and(eq(orgMember.orgId, req.orgId), eq(orgMember.userId, userId)));
+
+    if (!member) {
+      throw new ConnectError("Organization not found", Code.NotFound);
+    }
+
+    const members = await db
+      .select()
+      .from(orgMember)
+      .where(eq(orgMember.orgId, req.orgId));
+
+    return {
+      members: members.map((m) => ({
+        orgId: m.orgId,
+        userId: m.userId,
+        role: m.role,
+        joinedAt: m.joinedAt.toISOString(),
+      })),
+    };
   },
+
   async addMember(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    throw new ConnectError("Not implemented yet", Code.Unimplemented);
   },
+
   async updateMemberRole(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    throw new ConnectError("Not implemented yet", Code.Unimplemented);
   },
+
   async removeMember(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    throw new ConnectError("Not implemented yet", Code.Unimplemented);
   },
 };
