@@ -25,7 +25,31 @@ async function getUserFromContext(context: HandlerContext): Promise<string | nul
 // Placeholder handlers - will implement in next tasks
 export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
   async listOrgs(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    const userId = await getUserFromContext(context);
+    if (!userId) {
+      throw new ConnectError("Unauthorized", Code.Unauthenticated);
+    }
+
+    const userOrgs = await db
+      .select({
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+        createdAt: org.createdAt,
+      })
+      .from(org)
+      .innerJoin(orgMember, eq(org.id, orgMember.orgId))
+      .where(eq(orgMember.userId, userId))
+      .orderBy(org.name);
+
+    return {
+      orgs: userOrgs.map((o) => ({
+        id: o.id,
+        name: o.name,
+        slug: o.slug,
+        createdAt: o.createdAt.toISOString(),
+      })),
+    };
   },
   async getOrg(req, context) {
     throw new ConnectError("Not implemented", Code.Unimplemented);
