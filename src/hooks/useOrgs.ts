@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { orgClient } from '../lib/connect-client';
-import type { Org } from '../gen/org_pb';
 
 // Query keys
 export const orgKeys = {
@@ -24,14 +23,14 @@ export function useOrgs() {
 }
 
 // Get a single org by ID or slug
-export function useOrg(identifier: string) {
+export function useOrg(id: string) {
   return useQuery({
-    queryKey: orgKeys.detail(identifier),
+    queryKey: orgKeys.detail(id),
     queryFn: async () => {
-      const response = await orgClient.getOrg({ identifier });
+      const response = await orgClient.getOrg({ id });
       return response.org;
     },
-    enabled: !!identifier,
+    enabled: !!id,
   });
 }
 
