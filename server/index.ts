@@ -126,10 +126,11 @@ app.all(/^\/api\/auth\/.*/, async (req: Request, res: Response) => {
 /**
  * ConnectRPC Routes
  *
- * All routes matching /api/* (except /api/auth/*) are handled by ConnectRPC
+ * All Connect RPC routes are handled at the root level
+ * They use the format: /package.service/Method (e.g., /org.v1.OrgService/ListOrgs)
  * This provides both HTTP and gRPC support with type-safe Protocol Buffer definitions
  */
-app.use('/api', connectRouter);
+app.use(connectRouter);
 
 app.listen(port, () => {
   console.log(`Auth server running on http://localhost:${port}`);
