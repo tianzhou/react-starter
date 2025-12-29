@@ -94,7 +94,7 @@ jobs:
           # Create test user via signup API
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://localhost:3001/api/auth/sign-up/email \
             -H "Content-Type: application/json" \
-            -d '{"email":"test@example.com","password":"test123456","name":"Test User"}')
+            -d '{"email":"test@example.com","password":"test_password_123","name":"Test User"}')
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | head -n-1)
