@@ -1,18 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronDown, Plus } from 'lucide-react'
 import { Menu, MenuTrigger, MenuPopup, MenuItem, MenuSeparator } from './ui/menu'
 import { Button } from './ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
-
-interface Org {
-  id: string
-  name: string
-  slug: string
-  role: 'owner' | 'admin' | 'developer'
-}
+import { useOrgs, useCreateOrg } from '../hooks/useOrgs'
 
 interface OrgSwitcherProps {
   currentOrgSlug: string
@@ -20,62 +14,44 @@ interface OrgSwitcherProps {
 }
 
 export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcherProps) {
-  const [orgs, setOrgs] = useState<Org[]>([])
-  const [loading, setLoading] = useState(true)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [newOrgName, setNewOrgName] = useState('')
-  const [creating, setCreating] = useState(false)
+  const [newOrgSlug, setNewOrgSlug] = useState('')
   const navigate = useNavigate()
 
-  const currentOrg = orgs.find((org) => org.slug === currentOrgSlug)
+  const { data: orgs, isLoading } = useOrgs()
+  const createMutation = useCreateOrg()
 
-  useEffect(() => {
-    fetchOrgs()
-  }, [])
+  const currentOrg = orgs?.find((org) => org.slug === currentOrgSlug)
 
-  async function fetchOrgs() {
-    try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL
-      const response = await fetch(`${serverUrl}/api/orgs`, {
-        credentials: 'include',
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setOrgs(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch orgs:', error)
-    } finally {
-      setLoading(false)
-    }
+  // Auto-generate slug from name
+  function handleNameChange(name: string) {
+    setNewOrgName(name)
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+    setNewOrgSlug(slug)
   }
 
   async function handleCreateOrg(e: React.FormEvent) {
     e.preventDefault()
-    if (!newOrgName.trim() || creating) return
+    if (!newOrgName.trim() || !newOrgSlug.trim() || createMutation.isPending) return
 
-    setCreating(true)
     try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL
-      const response = await fetch(`${serverUrl}/api/orgs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name: newOrgName.trim() }),
+      const newOrg = await createMutation.mutateAsync({
+        name: newOrgName.trim(),
+        slug: newOrgSlug.trim(),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        setOrgs([...orgs, { ...data, role: 'owner' as const }])
-        setCreateDialogOpen(false)
-        setNewOrgName('')
-        // Navigate to new org
-        navigate(`/org/${data.slug}`)
+      setCreateDialogOpen(false)
+      setNewOrgName('')
+      setNewOrgSlug('')
+      // Navigate to new org
+      if (newOrg) {
+        navigate(`/org/${newOrg.slug}`)
       }
     } catch (error) {
       console.error('Failed to create org:', error)
-    } finally {
-      setCreating(false)
     }
   }
 
@@ -89,7 +65,7 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
         }}
         className="text-sm font-medium hover:text-gray-600 transition-colors"
       >
-        {loading ? '...' : currentOrg?.name || currentOrgSlug}
+        {isLoading ? '...' : currentOrg?.name || currentOrgSlug}
       </button>
 
       <Menu>
@@ -99,7 +75,7 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
           </Button>
         </MenuTrigger>
         <MenuPopup>
-          {orgs.map((org) => (
+          {orgs?.map((org) => (
             <MenuItem
               key={org.id}
               onSelect={() => onOrgChange(org.slug)}
@@ -107,7 +83,6 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{org.name}</span>
-                <span className="text-xs text-gray-500">{org.role}</span>
               </div>
             </MenuItem>
           ))}
@@ -135,9 +110,18 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
                   <Input
                     id="org-name"
                     value={newOrgName}
-                    onChange={(e) => setNewOrgName(e.target.value)}
+                    onChange={(e) => handleNameChange(e.target.value)}
                     placeholder="Acme Inc"
                     autoFocus
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="org-slug">Organization Slug</Label>
+                  <Input
+                    id="org-slug"
+                    value={newOrgSlug}
+                    onChange={(e) => setNewOrgSlug(e.target.value)}
+                    placeholder="acme-inc"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
@@ -148,8 +132,8 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={!newOrgName.trim() || creating}>
-                    {creating ? 'Creating...' : 'Create'}
+                  <Button type="submit" disabled={!newOrgName.trim() || !newOrgSlug.trim() || createMutation.isPending}>
+                    {createMutation.isPending ? 'Creating...' : 'Create'}
                   </Button>
                 </div>
               </form>
