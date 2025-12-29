@@ -35,7 +35,8 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
 
   async function fetchOrgs() {
     try {
-      const response = await fetch('http://localhost:3001/api/orgs', {
+      const serverUrl = import.meta.env.VITE_SERVER_URL
+      const response = await fetch(`${serverUrl}/api/orgs`, {
         credentials: 'include',
       })
       if (response.ok) {
@@ -55,7 +56,8 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
 
     setCreating(true)
     try {
-      const response = await fetch('http://localhost:3001/api/orgs', {
+      const serverUrl = import.meta.env.VITE_SERVER_URL
+      const response = await fetch(`${serverUrl}/api/orgs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -64,11 +66,11 @@ export default function OrgSwitcher({ currentOrgSlug, onOrgChange }: OrgSwitcher
 
       if (response.ok) {
         const data = await response.json()
-        setOrgs([...orgs, { ...data.org, role: 'owner' as const }])
+        setOrgs([...orgs, { ...data, role: 'owner' as const }])
         setCreateDialogOpen(false)
         setNewOrgName('')
-        // Navigate to new org with default project
-        navigate(`/org/${data.org.slug}/project/${data.defaultProject.slug}`)
+        // Navigate to new org
+        navigate(`/org/${data.slug}`)
       }
     } catch (error) {
       console.error('Failed to create org:', error)

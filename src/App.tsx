@@ -20,7 +20,8 @@ function DefaultRedirect() {
     async function redirect() {
       try {
         // Fetch user's orgs
-        const response = await fetch('http://localhost:3001/api/orgs', {
+        const serverUrl = import.meta.env.VITE_SERVER_URL
+        const response = await fetch(`${serverUrl}/api/orgs`, {
           credentials: 'include',
         })
 

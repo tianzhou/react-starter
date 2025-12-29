@@ -44,9 +44,9 @@ import { eq, and } from 'drizzle-orm';
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Enable CORS to allow frontend (port 5173) to make requests to this server (port 3001)
+// Enable CORS to allow frontend to make requests to this server
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL!,
   credentials: true, // Allow cookies for session management
 }));
 
@@ -108,8 +108,7 @@ app.all(/^\/api\/auth\/.*/, async (req: Request, res: Response) => {
       if (location) {
         // If the redirect is to a relative path, redirect to frontend
         if (location.startsWith('/')) {
-          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-          return res.redirect(response.status, `${frontendUrl}${location}`);
+          return res.redirect(response.status, `${process.env.FRONTEND_URL}${location}`);
         }
         return res.redirect(response.status, location);
       }

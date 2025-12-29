@@ -77,9 +77,9 @@ export const auth = betterAuth({
     },
   },
   trustedOrigins: [
-    process.env.FRONTEND_URL || "http://localhost:5173",
+    process.env.FRONTEND_URL!,
   ],
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
+  baseURL: process.env.VITE_SERVER_URL!,
   databaseHooks: {
     user: {
       create: {
