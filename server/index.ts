@@ -38,8 +38,7 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import cors from 'cors';
 import { auth } from '../src/lib/auth';
-import { db, org, orgMember } from '../src/db';
-import { eq, and } from 'drizzle-orm';
+import { connectRouter } from './connect';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -125,91 +124,12 @@ app.all(/^\/api\/auth\/.*/, async (req: Request, res: Response) => {
 });
 
 /**
- * Helper function to get user ID from session
+ * ConnectRPC Routes
+ *
+ * All routes matching /api/* (except /api/auth/*) are handled by ConnectRPC
+ * This provides both HTTP and gRPC support with type-safe Protocol Buffer definitions
  */
-async function getUserIdFromSession(req: Request): Promise<string | null> {
-  try {
-    const webRequest = toWebRequest(req);
-    const session = await auth.api.getSession({ headers: webRequest.headers });
-    return session?.user?.id || null;
-  } catch (error) {
-    console.error('Session error:', error);
-    return null;
-  }
-}
-
-/**
- * Organization API Routes
- */
-
-// GET /api/orgs - List all orgs the current user is a member of
-app.get('/api/orgs', async (req: Request, res: Response) => {
-  try {
-    const userId = await getUserIdFromSession(req);
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const userOrgs = await db
-      .select({
-        id: org.id,
-        name: org.name,
-        slug: org.slug,
-        role: orgMember.role,
-      })
-      .from(org)
-      .innerJoin(orgMember, eq(org.id, orgMember.orgId))
-      .where(eq(orgMember.userId, userId))
-      .orderBy(org.name);
-
-    res.json(userOrgs);
-  } catch (error) {
-    console.error('Error fetching orgs:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// POST /api/orgs - Create new org
-app.post('/api/orgs', async (req: Request, res: Response) => {
-  try {
-    const userId = await getUserIdFromSession(req);
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { name } = req.body;
-    if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      return res.status(400).json({ error: 'Organization name is required' });
-    }
-
-    // Generate slug from name
-    const baseSlug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    // Add timestamp to ensure uniqueness
-    const slug = `${baseSlug}-${Date.now().toString(36)}`;
-
-    // Create org
-    const [newOrg] = await db
-      .insert(org)
-      .values({ name: name.trim(), slug })
-      .returning();
-
-    // Add user as owner
-    await db.insert(orgMember).values({
-      orgId: newOrg.id,
-      userId: userId,
-      role: 'owner',
-    });
-
-    res.status(201).json(newOrg);
-  } catch (error) {
-    console.error('Error creating org:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+app.use('/api', connectRouter);
 
 app.listen(port, () => {
   console.log(`Auth server running on http://localhost:${port}`);
