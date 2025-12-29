@@ -9,11 +9,8 @@ import SignUp from './components/SignUp'
 import Account from './pages/Account'
 import OrgHome from './pages/OrgHome'
 import OrgSettings from './pages/OrgSettings'
-import ProjectHome from './pages/ProjectHome'
-import ProjectSettings from './pages/ProjectSettings'
 import Header from './components/Header'
 import { useSession } from './lib/auth-client'
-import { getLastUsedOrgProject } from './hooks/useOrgProject'
 
 function DefaultRedirect() {
   const navigate = useNavigate()
@@ -22,9 +19,6 @@ function DefaultRedirect() {
   useEffect(() => {
     async function redirect() {
       try {
-        // Try to get last used org/project from localStorage
-        const { lastUsedOrg, lastUsedProject } = getLastUsedOrgProject()
-
         // Fetch user's orgs
         const response = await fetch('http://localhost:3001/api/orgs', {
           credentials: 'include',
@@ -38,39 +32,9 @@ function DefaultRedirect() {
             return
           }
 
-          // Try to use last used org, or fall back to first org
-          const targetOrgSlug = lastUsedOrg || orgs[0].slug
-
-          // Fetch projects for the target org
-          const projectsResponse = await fetch(
-            `http://localhost:3001/api/orgs/${targetOrgSlug}/projects`,
-            { credentials: 'include' }
-          )
-
-          if (projectsResponse.ok) {
-            const projects = await projectsResponse.json()
-            if (projects.length > 0) {
-              const targetProjectSlug = lastUsedProject || projects[0].slug
-              navigate(`/org/${targetOrgSlug}/project/${targetProjectSlug}`, { replace: true })
-              return
-            }
-          }
-
-          // No projects in target org, use first org's first project
-          const firstOrgProjectsResponse = await fetch(
-            `http://localhost:3001/api/orgs/${orgs[0].slug}/projects`,
-            { credentials: 'include' }
-          )
-
-          if (firstOrgProjectsResponse.ok) {
-            const firstOrgProjects = await firstOrgProjectsResponse.json()
-            if (firstOrgProjects.length > 0) {
-              navigate(`/org/${orgs[0].slug}/project/${firstOrgProjects[0].slug}`, {
-                replace: true,
-              })
-              return
-            }
-          }
+          // Redirect to first org
+          navigate(`/org/${orgs[0].slug}`, { replace: true })
+          return
         }
       } catch (error) {
         console.error('Failed to redirect:', error)
@@ -149,8 +113,6 @@ function AppLayout() {
           <Route path="/" element={<DefaultRedirect />} />
           <Route path="/org/:orgSlug" element={<OrgHome />} />
           <Route path="/org/:orgSlug/settings" element={<OrgSettings />} />
-          <Route path="/org/:orgSlug/project/:projectSlug" element={<ProjectHome />} />
-          <Route path="/org/:orgSlug/project/:projectSlug/settings" element={<ProjectSettings />} />
           <Route path="/account" element={<Account />} />
         </Routes>
       </div>

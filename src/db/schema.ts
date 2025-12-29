@@ -39,33 +39,9 @@ export const orgMember = pgTable(
   ],
 );
 
-// Project table
-export const project = pgTable(
-  "project",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    orgId: uuid("org_id")
-      .notNull()
-      .references(() => org.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
-    slug: text("slug").notNull(),
-    description: text("description"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [
-    unique("project_org_slug_unique").on(table.orgId, table.slug),
-    index("project_org_idx").on(table.orgId),
-  ],
-);
-
 // Relations
 export const orgRelations = relations(org, ({ many }) => ({
   members: many(orgMember),
-  projects: many(project),
 }));
 
 export const orgMemberRelations = relations(orgMember, ({ one }) => ({
@@ -76,12 +52,5 @@ export const orgMemberRelations = relations(orgMember, ({ one }) => ({
   user: one(user, {
     fields: [orgMember.userId],
     references: [user.id],
-  }),
-}));
-
-export const projectRelations = relations(project, ({ one }) => ({
-  org: one(org, {
-    fields: [project.orgId],
-    references: [org.id],
   }),
 }));

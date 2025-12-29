@@ -1,9 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { HelpCircle } from 'lucide-react'
-import { useEffect } from 'react'
 import { useSession } from '@/lib/auth-client'
 import OrgSwitcher from './OrgSwitcher'
-import ProjectSwitcher from './ProjectSwitcher'
 import UserAvatar from './UserAvatar'
 import { Button } from './ui/button'
 
@@ -12,52 +10,18 @@ export default function Header() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Extract org and project from pathname
+  // Extract org from pathname
   const orgMatch = location.pathname.match(/^\/org\/([^/]+)/)
   const orgSlug = orgMatch?.[1]
-  const projectMatch = location.pathname.match(/\/project\/([^/]+)/)
-  const projectSlug = projectMatch?.[1]
 
-  // Save to localStorage when params change
-  useEffect(() => {
-    if (orgSlug) {
-      localStorage.setItem('lastUsedOrg', orgSlug)
-    }
-    if (projectSlug) {
-      localStorage.setItem('lastUsedProject', projectSlug)
-    }
-  }, [orgSlug, projectSlug])
-
-  const handleOrgChange = async (newOrgSlug: string) => {
-    // Fetch first project in the new org
-    try {
-      const response = await fetch(`http://localhost:3001/api/orgs/${newOrgSlug}/projects`, {
-        credentials: 'include',
-      })
-      if (response.ok) {
-        const projects = await response.json()
-        if (projects.length > 0) {
-          navigate(`/org/${newOrgSlug}/project/${projects[0].slug}`)
-        } else {
-          // No projects, just navigate to org
-          navigate(`/org/${newOrgSlug}`)
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error)
-    }
-  }
-
-  const handleProjectChange = (newProjectSlug: string) => {
-    if (orgSlug) {
-      navigate(`/org/${orgSlug}/project/${newProjectSlug}`)
-    }
+  const handleOrgChange = (newOrgSlug: string) => {
+    navigate(`/org/${newOrgSlug}`)
   }
 
   const handleLogoClick = () => {
-    // Navigate to current org/project or default
-    if (orgSlug && projectSlug) {
-      navigate(`/org/${orgSlug}/project/${projectSlug}`)
+    // Navigate to current org or default
+    if (orgSlug) {
+      navigate(`/org/${orgSlug}`)
     } else {
       navigate('/')
     }
@@ -87,24 +51,8 @@ export default function Header() {
         {isAccountPage ? (
           /* Account breadcrumb - no dropdown */
           <span className="text-sm font-medium">Account</span>
-        ) : orgSlug && projectSlug ? (
-          /* Org + Project breadcrumbs */
-          <>
-            {/* Org Switcher */}
-            <OrgSwitcher currentOrgSlug={orgSlug} onOrgChange={handleOrgChange} />
-
-            {/* Separator */}
-            <span className="text-gray-400">/</span>
-
-            {/* Project Switcher */}
-            <ProjectSwitcher
-              currentOrgSlug={orgSlug}
-              currentProjectSlug={projectSlug}
-              onProjectChange={handleProjectChange}
-            />
-          </>
         ) : orgSlug ? (
-          /* Org only breadcrumb */
+          /* Org breadcrumb */
           <OrgSwitcher currentOrgSlug={orgSlug} onOrgChange={handleOrgChange} />
         ) : null}
       </div>

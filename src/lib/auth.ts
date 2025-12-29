@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db, org, orgMember, project } from "@/db";
+import { db, org, orgMember } from "@/db";
 
 /**
- * Creates a personal org and default project for a new user
+ * Creates a personal org for a new user
  */
 async function createPersonalOrg(userId: string, userName: string) {
   try {
@@ -32,15 +32,7 @@ async function createPersonalOrg(userId: string, userName: string) {
       role: "owner",
     });
 
-    // Create a default project
-    await db.insert(project).values({
-      orgId: newOrg.id,
-      name: "Default Project",
-      slug: "default",
-      description: "Your first project",
-    });
-
-    console.log(`Created personal org and default project for user ${userId}: ${newOrg.id}`);
+    console.log(`Created personal org for user ${userId}: ${newOrg.id}`);
   } catch (error) {
     console.error("Failed to create personal org:", error);
     // Don't throw - we don't want to block user signup if org creation fails

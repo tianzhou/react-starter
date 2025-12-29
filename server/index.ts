@@ -38,7 +38,7 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import cors from 'cors';
 import { auth } from '../src/lib/auth';
-import { db, org, orgMember, project } from '../src/db';
+import { db, org, orgMember } from '../src/db';
 import { eq, and } from 'drizzle-orm';
 
 const app = express();
@@ -170,47 +170,6 @@ app.get('/api/orgs', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/orgs/:orgSlug/projects - List all projects in an org
-app.get('/api/orgs/:orgSlug/projects', async (req: Request, res: Response) => {
-  try {
-    const userId = await getUserIdFromSession(req);
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { orgSlug } = req.params;
-
-    // First, verify user has access to this org
-    const [orgData] = await db
-      .select({ id: org.id })
-      .from(org)
-      .innerJoin(orgMember, eq(org.id, orgMember.orgId))
-      .where(and(eq(org.slug, orgSlug), eq(orgMember.userId, userId)))
-      .limit(1);
-
-    if (!orgData) {
-      return res.status(404).json({ error: 'Organization not found or access denied' });
-    }
-
-    // Fetch projects for this org
-    const orgProjects = await db
-      .select({
-        id: project.id,
-        name: project.name,
-        slug: project.slug,
-        description: project.description,
-      })
-      .from(project)
-      .where(eq(project.orgId, orgData.id))
-      .orderBy(project.name);
-
-    res.json(orgProjects);
-  } catch (error) {
-    console.error('Error fetching projects:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // POST /api/orgs - Create new org
 app.post('/api/orgs', async (req: Request, res: Response) => {
   try {
@@ -246,74 +205,9 @@ app.post('/api/orgs', async (req: Request, res: Response) => {
       role: 'owner',
     });
 
-    // Create default project
-    const [defaultProject] = await db
-      .insert(project)
-      .values({
-        orgId: newOrg.id,
-        name: 'Default Project',
-        slug: 'default',
-        description: 'Your first project',
-      })
-      .returning();
-
-    res.status(201).json({
-      org: newOrg,
-      defaultProject,
-    });
+    res.status(201).json(newOrg);
   } catch (error) {
     console.error('Error creating org:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// POST /api/orgs/:orgSlug/projects - Create new project
-app.post('/api/orgs/:orgSlug/projects', async (req: Request, res: Response) => {
-  try {
-    const userId = await getUserIdFromSession(req);
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { orgSlug } = req.params;
-    const { name, description } = req.body;
-
-    if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      return res.status(400).json({ error: 'Project name is required' });
-    }
-
-    // Verify user has access to this org
-    const [orgData] = await db
-      .select({ id: org.id })
-      .from(org)
-      .innerJoin(orgMember, eq(org.id, orgMember.orgId))
-      .where(and(eq(org.slug, orgSlug), eq(orgMember.userId, userId)))
-      .limit(1);
-
-    if (!orgData) {
-      return res.status(404).json({ error: 'Organization not found or access denied' });
-    }
-
-    // Generate slug from name
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    // Create project
-    const [newProject] = await db
-      .insert(project)
-      .values({
-        orgId: orgData.id,
-        name: name.trim(),
-        slug,
-        description: description || null,
-      })
-      .returning();
-
-    res.status(201).json(newProject);
-  } catch (error) {
-    console.error('Error creating project:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -20,19 +20,14 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
 
   // Determine context from URL
   const context = useMemo(() => {
-    // Match /org/:orgSlug or /org/:orgSlug/project/:projectSlug (with optional /settings)
+    // Match /org/:orgSlug (with optional /settings)
     const orgMatch = location.pathname.match(/^\/org\/([^/]+)/)
     if (!orgMatch) return null
 
     const orgSlug = orgMatch[1]
-    const projectMatch = location.pathname.match(/\/project\/([^/]+)/)
-    const projectSlug = projectMatch ? projectMatch[1] : undefined
 
-    return { orgSlug, projectSlug }
+    return { orgSlug }
   }, [location.pathname])
-
-  const isOrgLevel = context && !context.projectSlug
-  const isProjectLevel = context && !!context.projectSlug
 
   const handleClick = (id: GutterItem) => {
     onItemClick(id)
@@ -40,23 +35,15 @@ export default function Gutter({ activeItem, onItemClick }: GutterProps) {
     if (!context) return
 
     if (id === 'home') {
-      if (context.projectSlug) {
-        navigate(`/org/${context.orgSlug}/project/${context.projectSlug}`)
-      } else {
-        navigate(`/org/${context.orgSlug}`)
-      }
+      navigate(`/org/${context.orgSlug}`)
     } else if (id === 'settings') {
-      if (context.projectSlug) {
-        navigate(`/org/${context.orgSlug}/project/${context.projectSlug}/settings`)
-      } else {
-        navigate(`/org/${context.orgSlug}/settings`)
-      }
+      navigate(`/org/${context.orgSlug}/settings`)
     }
   }
 
   const gutterIcons: { id: GutterItem; Icon: ComponentType<{ size?: number }>; label: string }[] = [
-    { id: 'home', Icon: Home, label: context?.projectSlug ? 'Project Home' : 'Organization Home' },
-    { id: 'settings', Icon: Settings, label: context?.projectSlug ? 'Project Settings' : 'Organization Settings' },
+    { id: 'home', Icon: Home, label: 'Organization Home' },
+    { id: 'settings', Icon: Settings, label: 'Organization Settings' },
   ]
 
   const renderButton = ({ id, Icon, label }: { id: GutterItem; Icon: ComponentType<any>; label: string }) => {
