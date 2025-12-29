@@ -55,7 +55,43 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
     throw new ConnectError("Not implemented", Code.Unimplemented);
   },
   async createOrg(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    const userId = await getUserFromContext(context);
+    if (!userId) {
+      throw new ConnectError("Unauthorized", Code.Unauthenticated);
+    }
+
+    if (!req.name?.trim()) {
+      throw new ConnectError("Name is required", Code.InvalidArgument);
+    }
+
+    // Generate slug from name
+    const baseSlug = req.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+    // Create org
+    const [newOrg] = await db
+      .insert(org)
+      .values({ name: req.name.trim(), slug })
+      .returning();
+
+    // Add user as owner
+    await db.insert(orgMember).values({
+      orgId: newOrg.id,
+      userId: userId,
+      role: "owner",
+    });
+
+    return {
+      org: {
+        id: newOrg.id,
+        name: newOrg.name,
+        slug: newOrg.slug,
+        createdAt: newOrg.createdAt.toISOString(),
+      },
+    };
   },
   async updateOrg(req, context) {
     throw new ConnectError("Not implemented", Code.Unimplemented);
