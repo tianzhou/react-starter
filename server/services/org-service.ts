@@ -126,7 +126,45 @@ export const orgServiceHandlers: ServiceImpl<typeof OrgService> = {
     };
   },
   async updateOrg(req, context) {
-    throw new ConnectError("Not implemented", Code.Unimplemented);
+    const userId = await getUserFromContext(context);
+    if (!userId) {
+      throw new ConnectError("Unauthorized", Code.Unauthenticated);
+    }
+
+    if (!req.id) {
+      throw new ConnectError("Organization ID required", Code.InvalidArgument);
+    }
+    if (!req.name?.trim()) {
+      throw new ConnectError("Name is required", Code.InvalidArgument);
+    }
+
+    // Check membership and role
+    const [member] = await db
+      .select()
+      .from(orgMember)
+      .where(and(eq(orgMember.orgId, req.id), eq(orgMember.userId, userId)));
+
+    if (!member) {
+      throw new ConnectError("Organization not found", Code.NotFound);
+    }
+    if (member.role !== "owner" && member.role !== "admin") {
+      throw new ConnectError("Permission denied", Code.PermissionDenied);
+    }
+
+    const [updated] = await db
+      .update(org)
+      .set({ name: req.name.trim() })
+      .where(eq(org.id, req.id))
+      .returning();
+
+    return {
+      org: {
+        id: updated.id,
+        name: updated.name,
+        slug: updated.slug,
+        createdAt: updated.createdAt.toISOString(),
+      },
+    };
   },
   async deleteOrg(req, context) {
     throw new ConnectError("Not implemented", Code.Unimplemented);
