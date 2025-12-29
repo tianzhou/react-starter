@@ -2,18 +2,13 @@ syntax = "proto3";
 
 package org.v1;
 
-// Organization Service - handles org and membership operations
+// Organization Service - handles org operations
 service OrgService {
   rpc ListOrgs(ListOrgsRequest) returns (ListOrgsResponse);
   rpc GetOrg(GetOrgRequest) returns (GetOrgResponse);
   rpc CreateOrg(CreateOrgRequest) returns (CreateOrgResponse);
   rpc UpdateOrg(UpdateOrgRequest) returns (UpdateOrgResponse);
   rpc DeleteOrg(DeleteOrgRequest) returns (DeleteOrgResponse);
-
-  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
-  rpc AddMember(AddMemberRequest) returns (AddMemberResponse);
-  rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (UpdateMemberRoleResponse);
-  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse);
 }
 
 // Core Types
@@ -22,13 +17,6 @@ message Org {
   string name = 2;
   string slug = 3;
   string created_at = 4;  // ISO 8601 timestamp string
-}
-
-message OrgMember {
-  string org_id = 1;
-  string user_id = 2;
-  string role = 3;  // "owner" | "admin" | "developer"
-  string joined_at = 4;  // ISO 8601 timestamp string
 }
 
 // List Orgs
@@ -72,42 +60,3 @@ message DeleteOrgRequest {
 }
 
 message DeleteOrgResponse {}
-
-// List Members
-message ListMembersRequest {
-  string org_id = 1;
-}
-
-message ListMembersResponse {
-  repeated OrgMember members = 1;
-}
-
-// Add Member
-message AddMemberRequest {
-  string org_id = 1;
-  string user_id = 2;
-  string role = 3;
-}
-
-message AddMemberResponse {
-  OrgMember member = 1;
-}
-
-// Update Member Role
-message UpdateMemberRoleRequest {
-  string org_id = 1;
-  string user_id = 2;
-  string role = 3;
-}
-
-message UpdateMemberRoleResponse {
-  OrgMember member = 1;
-}
-
-// Remove Member
-message RemoveMemberRequest {
-  string org_id = 1;
-  string user_id = 2;
-}
-
-message RemoveMemberResponse {}
